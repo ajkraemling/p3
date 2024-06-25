@@ -1,6 +1,8 @@
 import java.sql.*;
 import java.util.Scanner;
 
+//jdbc:oracle:thin:@oracle.wpi.edu:1521:orcl
+
 public class p3 {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -140,10 +142,84 @@ public class p3 {
     }
 
     public static void csstaff(Connection connection) {
+        try {
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter CS Staff Acount Name: ");
+            String StaffIN = scanner.nextLine();
 
+            String query = "SELECT S.ACCOUNTNAME, S.FIRSTNAME, S.LASTNAME, S.OFFICEID, P.PHONEEXT as PhoneExt, T.TITLENAME as Title " +
+                    "FROM CSSTAFF S " +
+                    "JOIN PHONEEXTENSIONS P ON S.ACCOUNTNAME = P.ACCOUNTNAME " +
+                    "JOIN CSSTAFFTITLES ST ON S.ACCOUNTNAME = ST.ACCOUNTNAME " +
+                    "JOIN TITLES T ON ST.ACRONYM = T.ACRONYM " +
+                    "WHERE S.ACCOUNTNAME = ?";
+            PreparedStatement pstmt = connection.prepareStatement(query);
+            pstmt.setString(1, StaffIN);
+            ResultSet rset = pstmt.executeQuery();
+
+            String accountName = "";
+            String firstName = "";
+            String lastName = "";
+            String officeID = "";
+            String title = "";
+            String tempTitle = "";
+            String phoneExt = "";
+            while (rset.next()) {
+                accountName = rset.getString("ACCOUNTNAME");
+                firstName = rset.getString("FIRSTNAME");
+                lastName = rset.getString("LASTNAME");
+                officeID = rset.getString("OFFICEID");
+                tempTitle = rset.getString("TITLE");
+                if(title.isEmpty()){
+                    title = tempTitle;
+                }
+                else{
+                    title += ", " + tempTitle;
+                }
+                phoneExt = rset.getString("PHONEEXT");
+            } // end while
+
+            if(!accountName.isEmpty()) {
+                System.out.println("CS Staff Information\n" +
+                        "Account Name: " + accountName + "\n" +
+                        "First Name: " + firstName + "\n" +
+                        "Last Name: " + lastName + "\n" +
+                        "Office ID: " + officeID + "\n" +
+                        "Title: " + title + "\n" +
+                        "Phone Ext: " + phoneExt);
+            }
+
+            rset.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException e) {
+            System.out.println("Error: Could not find CS Staff ID");
+            e.printStackTrace();
+            return;
+        }
     }
 
     public static void insertPhone(Connection connection) {
+        try {
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter CS Staff Acount Name: ");
+            String StaffIN = scanner.nextLine();
+            System.out.print("Enter the new Phone Extension: ");
+            String PhoneIN = scanner.nextLine();
 
+            String query = "UPDATE PHONEEXTENSIONS SET PHONEEXT = ? WHERE ACCOUNTNAME = ?";
+            PreparedStatement pstmt = connection.prepareStatement(query);
+            pstmt.setString(1, PhoneIN);
+            pstmt.setString(2, StaffIN);
+            ResultSet rset = pstmt.executeQuery();
+
+            rset.close();
+            pstmt.close();
+            connection.close();
+        } catch (SQLException e) {
+            System.out.println("Error: Could not find CS Staff ID");
+            e.printStackTrace();
+            return;
+        }
     }
 }
